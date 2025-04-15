@@ -1,6 +1,24 @@
 version: '3.9'
 
 services:
+  api:
+    build:
+      context: ./backend/graphQL_api
+      dockerfile: Dockerfile
+    container_name: api
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - backend-network
+    ports:
+      - "8000:8000"
+    labels:
+      kompose.service.expose: "8000"
+
   postgres:
     build:
       context: .
@@ -19,24 +37,6 @@ services:
       - "5432:5432"
     labels:
       - traefik.enable=false
-
-  api:
-    build:
-      context: ./backend/graphQL_api
-      dockerfile: Dockerfile
-    container_name: api
-    restart: unless-stopped
-    env_file:
-      - .env
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - backend-network
-    ports:
-      - "8000:8000"
-    labels:
-      kompose.service.expose: "8000"
 
   bot:
     build:
