@@ -2,7 +2,8 @@ version: '3.9'
 
 services:
   postgres:
-    image: postgres:15-alpine
+    build:
+      context: .
     container_name: postgres
     restart: unless-stopped
     env_file:
@@ -11,8 +12,6 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASS}
       POSTGRES_DB: ${DB_NAME}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
     networks:
       - backend-network
     healthcheck:
@@ -55,9 +54,6 @@ services:
       - api
     networks:
       - backend-network
-
-volumes:
-  postgres_data:
 
 networks:
   backend-network:
