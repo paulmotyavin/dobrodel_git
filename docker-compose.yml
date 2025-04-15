@@ -9,9 +9,6 @@ services:
     restart: unless-stopped
     env_file:
       - .env
-    depends_on:
-      postgres:
-        condition: service_healthy
     networks:
       - backend-network
     ports:
@@ -19,25 +16,6 @@ services:
     labels:
       - timeweb.port=8000
       - timeweb.protocol=http
-
-  postgres:
-    build:
-      context: .
-    container_name: postgres
-    restart: unless-stopped
-    env_file:
-      - .env
-    networks:
-      - backend-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    ports:
-      - "5432:5432"
-    labels:
-      - timeweb.enable=false
 
   bot:
     build:
@@ -50,7 +28,6 @@ services:
     environment:
       API_URL: http://api:8000
     depends_on:
-      - postgres
       - api
     networks:
       - backend-network
