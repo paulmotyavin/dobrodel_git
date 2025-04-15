@@ -71,6 +71,8 @@ INSERT INTO tags (name) VALUES
 ('Здоровье'),
 ('Творчество');
 
+CREATE EXTENSION IF NOT EXISTS postgis;
+
 CREATE TABLE locations (
     id SERIAL PRIMARY KEY,
     address TEXT NOT NULL,
@@ -137,6 +139,33 @@ CREATE TYPE registration_status AS ENUM (
     'ОТМЕНЕН',
     'ПРОСРОЧЕН'
 );
+
+CREATE OR REPLACE FUNCTION generate_custom_code()
+RETURNS VARCHAR AS $$
+DECLARE
+    generated_code  VARCHAR(12);
+    allowed_chars TEXT := 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    random_bytes BYTEA;
+    i INT;
+BEGIN
+    LOOP
+        random_bytes := gen_random_bytes(12);
+        generated_code := '';
+
+        FOR i IN 1..12 LOOP
+            generated_code := generated_code || SUBSTRING(
+                allowed_chars,
+                (get_byte(random_bytes, i - 1) % LENGTH(allowed_chars)) + 1,
+                1
+            );
+        END LOOP;
+
+        IF NOT EXISTS (SELECT 1 FROM registrations WHERE code = generated_code) THEN
+            RETURN generated_code;
+        END IF;
+    END LOOP;
+END;
+$$ LANGUAGE plpgsql;
 
 CREATE TABLE registrations (
     id SERIAL PRIMARY KEY,
@@ -273,33 +302,6 @@ CREATE INDEX idx_registrations_user ON registrations(user_id);
 CREATE INDEX idx_transactions_user ON point_transactions(user_id);
 CREATE INDEX idx_projects_category ON projects(category_id);
 CREATE INDEX idx_projects_dates ON projects(start_date, end_date);
-
-CREATE OR REPLACE FUNCTION generate_custom_code()
-RETURNS VARCHAR AS $$
-DECLARE
-    generated_code  VARCHAR(12);
-    allowed_chars TEXT := 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    random_bytes BYTEA;
-    i INT;
-BEGIN
-    LOOP
-        random_bytes := gen_random_bytes(12);
-        generated_code := '';
-
-        FOR i IN 1..12 LOOP
-            generated_code := generated_code || SUBSTRING(
-                allowed_chars,
-                (get_byte(random_bytes, i - 1) % LENGTH(allowed_chars)) + 1,
-                1
-            );
-        END LOOP;
-
-        IF NOT EXISTS (SELECT 1 FROM registrations WHERE code = generated_code) THEN
-            RETURN generated_code;
-        END IF;
-    END LOOP;
-END;
-$$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION set_registration_code()
 RETURNS TRIGGER AS $$
