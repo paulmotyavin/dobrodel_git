@@ -13,7 +13,6 @@ services:
       POSTGRES_DB: ${DB_NAME}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - backend-network
     healthcheck:
@@ -39,8 +38,6 @@ services:
       - backend-network
     ports:
       - "8000:8000"
-    volumes:
-      - ./backend/src:/app/src
 
   bot:
     build:
@@ -58,8 +55,6 @@ services:
       - api
     networks:
       - backend-network
-    volumes:
-      - ./bot/src:/app/src
 
 volumes:
   postgres_data:
