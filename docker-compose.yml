@@ -17,7 +17,8 @@ services:
     ports:
       - "8000:8000"
     labels:
-      kompose.service.expose: "8000"
+      - timeweb.port=8000
+      - timeweb.protocol=http
 
   postgres:
     build:
@@ -36,7 +37,7 @@ services:
     ports:
       - "5432:5432"
     labels:
-      - traefik.enable=false
+      - timeweb.enable=false
 
   bot:
     build:
